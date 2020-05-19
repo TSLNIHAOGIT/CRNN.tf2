@@ -54,6 +54,9 @@ class OCRDataLoader:
         chars = tf.strings.unicode_split(label, input_encoding="UTF-8")
         mapped_label = tf.ragged.map_flat_values(self.table.lookup, chars)
         sparse_label = mapped_label.to_sparse()
+
+
+
         return image, sparse_label
 
 

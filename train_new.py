@@ -5,10 +5,12 @@ import argparse
 import tensorflow as tf
 from tensorflow import keras
 
-from dataset import OCRDataLoader,parse_mjsynth
+from dataset import OCRDataLoader,parse_mjsynth,Decoder
 from model import crnn
 from losses import CTCLoss
 from metrics import WordAccuracy
+
+
 
 
 parser = argparse.ArgumentParser()
@@ -25,11 +27,11 @@ parser.add_argument("-vf", "--val_parse_funcs", type=str, nargs="+",
 #                     help="The path of table file.")
 parser.add_argument("-w", "--image_width", type=int, default=100, 
                     help="Image width(>=16).")
-parser.add_argument("-b", "--batch_size", type=int, default=20,
+parser.add_argument("-b", "--batch_size", type=int, default=25,
                     help="Batch size.")
-parser.add_argument("-lr", "--learning_rate", type=float, default=0.001, 
+parser.add_argument("-lr", "--learning_rate", type=float, default=0.0001,
                     help="Learning rate.")
-parser.add_argument("-e", "--epochs", type=int, default=10,
+parser.add_argument("-e", "--epochs", type=int, default=50,
                     help="Num of epochs to train.")
 
 args = parser.parse_args()
@@ -54,6 +56,12 @@ r'E:\tsl_file\python_project\CRNN.tf2\example\table.txt',
 
     args.batch_size,
     True)
+
+with open(r'E:\tsl_file\python_project\CRNN.tf2\example\table.txt', "r") as f:
+    inv_table = [char.strip() for char in f]
+decoder = Decoder(inv_table)
+
+
 print("Num of training samples: {}".format(len(train_dl)))
 localtime = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
 # saved_model_path = ("saved_models/{}/".format(localtime) +
@@ -83,7 +91,7 @@ model = crnn(train_dl.num_classes)
 print('start compile')
 custom_loss=CTCLoss()
 print('custom_loss={}'.format(custom_loss))
-
+# compute_accuracy=WordAccuracy()
 
 
 
@@ -160,15 +168,17 @@ for epoch in range(args.epochs):
         optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 
 
-        # acc = compute_accuracy(ground_truths, preds)
+        # acc = compute_accuracy(targ,y_pred_logits)
         #
         # tf.summary.scalar('loss', batch_loss, step=epoch + batch)
         # tf.summary.scalar('accuracy', acc, step=epoch + batch)
         # tf.summary.scalar('lr', learning_rate.numpy(), step=epoch + batch)
         # writer.flush()
-        acc=None
 
-        if batch % 9 == 0:
+
+        if batch % 10 == 0:
+            decoded=decoder.decode(y_pred_logits, method='beam_search')
+            print('decoded',decoded)#len is batch_size
             print('Epoch {} Batch {} Loss {:.4f}  '.format(epoch,batch,batch_loss.numpy()))
         # if batch % 9 == 0:
         #     for i in range(3):

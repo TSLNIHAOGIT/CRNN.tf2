@@ -15,6 +15,7 @@ class WordAccuracy(keras.metrics.Metric):
                 
     def update_state(self, y_true, y_pred, sample_weight=None):
         print('y',y_true,y_pred)
+        y_true = tf.sparse.to_dense(y_true)
         """
         Maybe have more fast implementation.
         """
