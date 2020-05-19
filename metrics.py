@@ -14,6 +14,7 @@ class WordAccuracy(keras.metrics.Metric):
                                      initializer=tf.zeros_initializer())
                 
     def update_state(self, y_true, y_pred, sample_weight=None):
+        print('y',y_true,y_pred)
         """
         Maybe have more fast implementation.
         """
@@ -23,10 +24,22 @@ class WordAccuracy(keras.metrics.Metric):
         decoded, _ = tf.nn.ctc_greedy_decoder(
             inputs=tf.transpose(y_pred, perm=[1, 0, 2]),
             sequence_length=logit_length)
-        y_true = tf.sparse.reset_shape(y_true, [b, max_width])
-        y_pred = tf.sparse.reset_shape(decoded[0], [b, max_width])
-        y_true = tf.sparse.to_dense(y_true, default_value=-1)
-        y_pred = tf.sparse.to_dense(y_pred, default_value=-1)
+
+        # y_true = tf.sparse.reset_shape(y_true, [b, max_width])
+        # y_pred = tf.sparse.reset_shape(decoded[0], [b, max_width])
+        # y_true = tf.sparse.to_dense(y_true, default_value=-1)
+        # y_pred = tf.sparse.to_dense(y_pred, default_value=-1)
+
+        y_true = tf.reshape(y_true, (b, max_width))
+        print('decode',decoded[0])
+        y_pred = tf.reshape(tf.sparse.to_dense(decoded[0]), [b, max_width])
+        # y_true = tf.sparse.to_dense(y_true, default_value=-1)
+        # y_pred = tf.sparse.to_dense(y_pred, default_value=-1)
+        print('y_pred',y_pred)
+
+
+
+
         y_true = tf.cast(y_true, tf.int32)
         y_pred = tf.cast(y_pred, tf.int32)
         values = tf.math.reduce_any(tf.math.not_equal(y_true, y_pred), axis=1)

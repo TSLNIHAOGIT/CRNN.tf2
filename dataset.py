@@ -1,7 +1,7 @@
 import os
 
 import tensorflow as tf
-
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 class OCRDataLoader:
     """
@@ -53,6 +53,10 @@ class OCRDataLoader:
         sparse_label = mapped_label.to_sparse()
         return image, sparse_label
 
+
+        # return image, mapped_label
+
+
     def __len__(self):
         return self.size
 
@@ -76,10 +80,12 @@ def parse_mjsynth(annotation_path):
 def parse_example(annotation_path):
     """Parse example dataset. format: XX.jpg label"""
     dirname = os.path.dirname(annotation_path)
-    with open(annotation_path) as f:
-        content = [line.strip().split() for line in f.readlines()]
+    with open(annotation_path,errors='ignore',encoding='utf8') as f:
+        content = [line.strip().split() for line in f]
+        print('content',content)
     img_paths = [os.path.join(dirname, v[0]) for v in content]
     labels = [v[1] for v in content]
+    print('img_paths ={}\n labels={}'.format(img_paths,labels))
     return img_paths, labels
 
 
@@ -101,6 +107,7 @@ def read_img_paths_and_labels(annotation_paths, funcs):
     img_paths = []
     labels = []
     for annotation_path, func in zip(annotation_paths, funcs):
+        print('anot',annotation_path, '**',func)
         part_img_paths, part_labels = parse_func_map[func](annotation_path)
         img_paths.extend(part_img_paths)
         labels.extend(part_labels)
@@ -154,22 +161,71 @@ class Decoder:
 
 
 if __name__ == "__main__":
+    # parse_example(r'E:\tsl_file\python_project\CRNN.tf2\example\annotation.txt')
     import argparse
-
     parser = argparse.ArgumentParser()
-    parser.add_argument("-a", "--annotation_paths", type=str, required=True, 
-                    nargs="+", help="The paths of annnotation file.")
-    parser.add_argument("-f", "--parse_funcs", type=str, required=True,
-                        nargs="+", 
+    # parser.add_argument("-ta", "--train_annotation_paths", type=str,default='../example/images',
+    #                     required=True, nargs="+",
+    #                     help="The path of training data annnotation file.")
+    parser.add_argument("-va", "--val_annotation_paths", type=str, nargs="+",
+                        help="The path of val data annotation file.")
+    # parser.add_argument("-tf", "--train_parse_funcs", type=str,default='mjsynth', required=True,
+    #                     nargs="+", help="The parse functions of annotaion files.")
+    parser.add_argument("-vf", "--val_parse_funcs", type=str, nargs="+",
                         help="The parse functions of annotaion files.")
-    parser.add_argument("-t", "--table_path", type=str, required=True, 
-                        help="The path of table file.")
+    # parser.add_argument("-t", "--table_path", type=str, required=True,default='example/tables' ,
+    #                     help="The path of table file.")
+    parser.add_argument("-w", "--image_width", type=int, default=100,
+                        help="Image width(>=16).")
+    parser.add_argument("-b", "--batch_size", type=int, default=2,
+                        help="Batch size.")
+    parser.add_argument("-lr", "--learning_rate", type=float, default=0.001,
+                        help="Learning rate.")
+    parser.add_argument("-e", "--epochs", type=int, default=20,
+                        help="Num of epochs to train.")
+
     args = parser.parse_args()
+    print('args', args)
 
-    dl = OCRDataLoader(args.annotation_paths, args.parse_funcs, 100, 
-                       args.table_path, batch_size=3)
+    train_dl = OCRDataLoader(
+        # args.train_annotation_paths,
+        # args.train_parse_funcs,
 
-    decoder = Decoder(dl.inv_table)
+        [r'E:\tsl_file\python_project\CRNN.tf2\example\annotation.txt',
+         ],
+        ['example'],
 
-    for x, y in dl().take(1):
-        print(decoder.decode(y, from_logits=False))
+        args.image_width,
+        # args.table_path,
+        r'E:\tsl_file\python_project\CRNN.tf2\example\table.txt',
+
+        args.batch_size,
+        True)
+
+    for index,( x ,y) in enumerate(train_dl()):
+        '''x_shape=(batch_size,h,w,1),index,是将所有epochs*data_counts/batch_size得到的'''
+        '''x_shape=(4, 32, 100, 1),y_shape=(4, None)'''
+        print('x_shape={},y_shape={}'.format(x.shape,y.shape))
+        print('index={},x={},y={}'.format(index,x,y))
+
+
+    # import argparse
+    #
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument("-a", "--annotation_paths", type=str, required=True,
+    #                 nargs="+", help="The paths of annnotation file.")
+    # parser.add_argument("-f", "--parse_funcs", type=str, required=True,
+    #                     nargs="+",
+    #                     help="The parse functions of annotaion files.")
+    # parser.add_argument("-t", "--table_path", type=str, required=True,
+    #                     help="The path of table file.")
+    # args = parser.parse_args()
+    #
+    # dl = OCRDataLoader(args.annotation_paths, args.parse_funcs, 100,
+    #                    args.table_path, batch_size=3)
+    #
+    # decoder = Decoder(dl.inv_table)
+
+    #
+    # for x, y in dl().take(1):
+    #     print(decoder.decode(y, from_logits=False))

@@ -79,11 +79,23 @@ model = crnn(train_dl.num_classes)
 print('start compile')
 custom_loss=CTCLoss()
 print('custom_loss={}'.format(custom_loss))
-model.compile(
-              optimizer=keras.optimizers.Adam(lr=args.learning_rate),
-              loss=custom_loss,
-              # metrics=[WordAccuracy()]
-)
+
+
+
+
+start_learning_rate = args.learning_rate
+learning_rate = tf.Variable(start_learning_rate, dtype=tf.float32)
+
+optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+
+
+
+
+# model.compile(
+#               optimizer=keras.optimizers.Adam(lr=args.learning_rate),
+#               loss=custom_loss,
+#               metrics=[WordAccuracy()]
+# )
 
 
 # model.summary()
@@ -95,14 +107,74 @@ model.compile(
 # ]
 print('start fit')
 
-ds=train_dl()
-for each in ds:
-    print('each',each)
+dataset=train_dl()
+
+# for index, each in enumerate(dataset):
+#     #index=0-29,就是repeat=30
+#     #每张图片大小是32*100   shape=(label_counts,h,w,1)
+#     #each (<tf.Tensor: id=2706, shape=(4, 32, 100, 1),
+#     print('index={},\n,each={}'.format(index,each))
+#
+# model.fit(train_dl(), epochs=args.epochs,
+#           #callbacks=callbacks,
+#           validation_data=val_dl())
+
+import math
+import numpy as np
+
+BATCH_SIZE=args.batch_size
 
 
-model.fit(train_dl(), epochs=args.epochs,
-          #callbacks=callbacks,
-          validation_data=val_dl())
+# if True:
+for epoch in range(args.epochs):
+    start = time.time()
+
+    total_loss = 0
+    lr = max(0.00001, args.learning_rate * math.pow(0.99, epoch))
+    learning_rate.assign(lr)
+    # print('start')
+
+    for (batch, (inp, targ)) in enumerate(dataset):
+        # print('batch',batch)
+        # print('inp shape',inp.shape)#inp shape (64, 32, 100, 1, 1)
+        # loss = 0
+        # global_step.assign_add(1)
+
+        # results = np.zeros((BATCH_SIZE, targ.shape[1] - 1), np.int32)
+
+        with tf.GradientTape() as tape:
+            y_pred_logits = model(inp)
+            batch_loss=custom_loss(targ,y_pred_logits)
+
+
+        total_loss += batch_loss
+
+
+        gradients = tape.gradient(batch_loss, model.trainable_variables)
+
+        gradients, _ = tf.clip_by_global_norm(gradients, 15)
+        optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+
+
+        # acc = compute_accuracy(ground_truths, preds)
+        #
+        # tf.summary.scalar('loss', batch_loss, step=epoch + batch)
+        # tf.summary.scalar('accuracy', acc, step=epoch + batch)
+        # tf.summary.scalar('lr', learning_rate.numpy(), step=epoch + batch)
+        # writer.flush()
+        acc=None
+
+        if batch % 9 == 0:
+            print('Batch {} Loss {:.4f}  '.format(epoch+batch,batch_loss.numpy()))
+        # if batch % 9 == 0:
+        #     for i in range(3):
+        #         print("real:{:s}  pred:{:s} acc:{:f}".format(ground_truths[i], preds[i],
+        #                                                      compute_accuracy([ground_truths[i]], [preds[i]])))
+
+            # checkpoint.save(file_prefix=checkpoint_prefix)
+
+    # print('Time taken for 1 epoch {} sec\n'.format(time.time() - start))
+
 
 '''
 
