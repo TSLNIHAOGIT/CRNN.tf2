@@ -38,6 +38,9 @@ class OCRDataLoader:
         self.dataset = ds
 
     def _decode_and_resize(self, filename, label):
+        print('filename',filename)
+        # filename=os.path.join(r'E:\tsl_file\python_project\all_datas',filename)
+
         image = tf.io.read_file(filename)
         image = tf.io.decode_jpeg(image, channels=1)
         image = tf.image.convert_image_dtype(image, tf.float32)

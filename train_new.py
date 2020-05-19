@@ -25,11 +25,11 @@ parser.add_argument("-vf", "--val_parse_funcs", type=str, nargs="+",
 #                     help="The path of table file.")
 parser.add_argument("-w", "--image_width", type=int, default=100, 
                     help="Image width(>=16).")
-parser.add_argument("-b", "--batch_size", type=int, default=256, 
+parser.add_argument("-b", "--batch_size", type=int, default=20,
                     help="Batch size.")
 parser.add_argument("-lr", "--learning_rate", type=float, default=0.001, 
                     help="Learning rate.")
-parser.add_argument("-e", "--epochs", type=int, default=20, 
+parser.add_argument("-e", "--epochs", type=int, default=10,
                     help="Num of epochs to train.")
 
 args = parser.parse_args()
@@ -39,9 +39,13 @@ train_dl = OCRDataLoader(
     # args.train_annotation_paths,
     # args.train_parse_funcs,
 
-[r'E:\tsl_file\python_project\CRNN.tf2\example\annotation.txt',
+[
+    r'E:\tsl_file\python_project\all_datas\annotation_crnn.txt'
+    # r'E:\tsl_file\python_project\CRNN.tf2\example\annotation.txt',
  ],
-['example'],
+[
+    'example'
+],
 
 
     args.image_width,
@@ -165,7 +169,7 @@ for epoch in range(args.epochs):
         acc=None
 
         if batch % 9 == 0:
-            print('Batch {} Loss {:.4f}  '.format(epoch+batch,batch_loss.numpy()))
+            print('Epoch {} Batch {} Loss {:.4f}  '.format(epoch,batch,batch_loss.numpy()))
         # if batch % 9 == 0:
         #     for i in range(3):
         #         print("real:{:s}  pred:{:s} acc:{:f}".format(ground_truths[i], preds[i],
