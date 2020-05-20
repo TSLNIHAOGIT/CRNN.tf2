@@ -42,9 +42,16 @@ class OCRDataLoader:
         # filename=os.path.join(r'E:\tsl_file\python_project\all_datas',filename)
 
         image = tf.io.read_file(filename)
-        image = tf.io.decode_jpeg(image, channels=1)
+        '''参数channels表示解码图像的所需数量的颜色通道。
+            可接受的值是：
+            0：使用JPEG编码图像中的通道数。
+            1：输出灰度图像。
+            3：输出RGB图像。'''
+        image = tf.io.decode_jpeg(image, channels=3)#channels=1
         image = tf.image.convert_image_dtype(image, tf.float32)
         image = tf.image.resize(image, (32, self.image_width))
+        print('image shape',image.shape)#image shape (32, 100, 3)
+        print('label shape',label.shape)
         return image, label
 
     def _convert_label(self, image, label):

@@ -1,6 +1,6 @@
 from tensorflow import keras
 from tensorflow.keras import layers
-
+from tensorflow.keras.applications.vgg16 import VGG16, preprocess_input
 
 def vgg(input_tensor):
     """
@@ -36,15 +36,40 @@ def vgg(input_tensor):
     return x
 
 
-def crnn(num_classes):
-    img_input = keras.Input(shape=(32, None, 1))
+def vgg16():
+    base_model = VGG16(weights='imagenet', include_top=False,pooling=None)
+    base_model.trainable = False
+    vgg_model = keras.Sequential()
 
-    x = vgg(img_input)
+    # 将vgg16模型的 卷积层 添加到新模型中（不包含全连接层)
+    ##-5是48可以自己加pooLling层变成24，也可以用默认的到-4是12
+    for item in base_model.layers[:-5]:
+        vgg_model.add(item)
+    vgg_model.add(layers.MaxPool2D(pool_size=(2, 2), strides=(2, 1), padding='same'))
+
+    # vgg_model = keras.Sequential([
+    #     base_model,
+    #     # keras.layers.GlobalAveragePooling2D()
+    # ])
+    return vgg_model
+
+print('vgg16 summary',vgg16().summary())
+
+def crnn(num_classes):
+    img_input = keras.Input(shape=(32, None, 3))
+
+    # x = vgg(img_input)#self def vgg output x_shape=(None, 1, None, 512)
+    x=vgg16()(img_input)
+    print('x',x.shape)#base_model output x_shape= (None, 1, None, 512)
+
+
     x = layers.Reshape((-1, 512))(x)
 
     x = layers.Bidirectional(layers.LSTM(units=256, return_sequences=True))(x)
     x = layers.Bidirectional(layers.LSTM(units=256, return_sequences=True))(x)
     x = layers.Dense(units=num_classes)(x)
+    #self inputs=Tensor("input_2:0", shape=(None, 32, None, 3), dtype=float32), outputs=Tensor("dense/Identity:0", shape=(None, None, 63), dtype=float32)
+
     print('inputs={}, outputs={}'.format(img_input,x))
     return keras.Model(inputs=img_input, outputs=x, name='CRNN')
 
