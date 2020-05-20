@@ -140,9 +140,17 @@ Non-trainable params: 2,048
 
 
 '''
+自己加pooling层：24
 decoded ['7PFRN3SU', '45BQYZB', '79VE', '8DK', '2', 'MB7A', 'RAK', '4CED', '1VFYO', 'U430WE', '920F', 'PMS6', 'S', '3UDM8V', 'H', '9SWGYB', 'YZAEN9E', 'X', 'SQCBR53', 'N8FLG12Y', '3S5R1T6X', '89TDTV', 'FPJJTA4H', 'QPIPII1', 'CWFZL']
 Epoch 49 Batch 10 Loss 3.2187  
 y_shape=(25, 10),y_pred_shape=(25, 24, 63)
+logit_length_shape=(25,)
+
+
+#默认pooling层:12
+decoded ['RDQK5', 'U430WE', '0UN', '6X5', 'G65', 'F7Y365', '7', 'S', 'X', 'QVEP0AS', '2S7XX', 'MJUADSXB', 'J4341', '3I6MG0', 'X9FGH31S9', 'WVS', '9TGR2BRG', '61MX98R4J', '7ULKVDAS', '5V92', 'VW', '3V5', 'T5W0KR9X', 'PMS6', 'RAK']
+Epoch 49 Batch 10 Loss 2.9665  
+y_shape=(25, 10),y_pred_shape=(25, 12, 63)
 logit_length_shape=(25,)
 
 '''
