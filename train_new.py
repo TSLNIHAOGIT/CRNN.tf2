@@ -27,7 +27,7 @@ parser.add_argument("-vf", "--val_parse_funcs", type=str, nargs="+",
 #                     help="The path of table file.")
 parser.add_argument("-w", "--image_width", type=int, default=100, 
                     help="Image width(>=16).")
-parser.add_argument("-b", "--batch_size", type=int, default=25,
+parser.add_argument("-b", "--batch_size", type=int, default=30,
                     help="Batch size.")
 parser.add_argument("-lr", "--learning_rate", type=float, default=0.0001,
                     help="Learning rate.")
@@ -108,18 +108,18 @@ optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 #               loss=custom_loss,
 #               metrics=[WordAccuracy()]
 # )
-
-
+#
+#
 # model.summary()
-
+#
 # callbacks = [
-#     keras.callbacks.ModelCheckpoint(saved_model_path),
-    # keras.callbacks.TensorBoard(log_dir="../example/logs/{}".format(localtime),
-    #                             histogram_freq=1)
+#     # keras.callbacks.ModelCheckpoint(saved_model_path),
+#     keras.callbacks.TensorBoard(log_dir="../example/logs/{}".format(localtime),
+#                                 histogram_freq=1)
 # ]
-print('start fit')
+# print('start fit')
+#
 
-dataset=train_dl()
 
 # for index, each in enumerate(dataset):
 #     #index=0-29,就是repeat=30
@@ -128,66 +128,76 @@ dataset=train_dl()
 #     print('index={},\n,each={}'.format(index,each))
 #
 # model.fit(train_dl(), epochs=args.epochs,
-#           #callbacks=callbacks,
+#           callbacks=callbacks,
 #           validation_data=val_dl())
+#
+
 
 import math
 import numpy as np
 
+
+dataset=train_dl()
 BATCH_SIZE=args.batch_size
+N_BATCH=10#总数据条数/batch_size
+
+logdir = "./logs/"
+writer = tf.summary.create_file_writer(logdir)
 
 
 # if True:
-for epoch in range(args.epochs):
-    start = time.time()
+with writer.as_default():
+    for epoch in range(args.epochs):
+        start = time.time()
 
-    total_loss = 0
-    lr = max(0.00001, args.learning_rate * math.pow(0.99, epoch))
-    learning_rate.assign(lr)
-    # print('start')
+        total_loss = 0
+        lr = max(0.00001, args.learning_rate * math.pow(0.99, epoch))
+        learning_rate.assign(lr)
+        # print('start')
 
-    for (batch, (inp, targ)) in enumerate(dataset):
-        # print('batch',batch)
-        # print('inp shape',inp.shape)#inp shape (64, 32, 100, 1, 1)
-        # loss = 0
-        # global_step.assign_add(1)
+        for (batch, (inp, targ)) in enumerate(dataset):
+            step = epoch * N_BATCH + batch
+            # print('batch',batch)
+            # print('inp shape',inp.shape)#inp shape (64, 32, 100, 1, 1)
+            # loss = 0
+            # global_step.assign_add(1)
 
-        # results = np.zeros((BATCH_SIZE, targ.shape[1] - 1), np.int32)
+            # results = np.zeros((BATCH_SIZE, targ.shape[1] - 1), np.int32)
 
-        with tf.GradientTape() as tape:
-            y_pred_logits = model(inp)
-            batch_loss=custom_loss(targ,y_pred_logits)
-
-
-        total_loss += batch_loss
-
-
-        gradients = tape.gradient(batch_loss, model.trainable_variables)
-
-        gradients, _ = tf.clip_by_global_norm(gradients, 15)
-        optimizer.apply_gradients(zip(gradients, model.trainable_variables))
+            with tf.GradientTape() as tape:
+                y_pred_logits = model(inp)
+                batch_loss=custom_loss(targ,y_pred_logits)
 
 
-        # acc = compute_accuracy(targ,y_pred_logits)
-        #
-        # tf.summary.scalar('loss', batch_loss, step=epoch + batch)
-        # tf.summary.scalar('accuracy', acc, step=epoch + batch)
-        # tf.summary.scalar('lr', learning_rate.numpy(), step=epoch + batch)
-        # writer.flush()
+            total_loss += batch_loss
 
 
-        if batch % 10 == 0:
-            decoded=decoder.decode(y_pred_logits, method='beam_search')
-            print('decoded',decoded)#len is batch_size
-            print('Epoch {} Batch {} Loss {:.4f}  '.format(epoch,batch,batch_loss.numpy()))
-        # if batch % 9 == 0:
-        #     for i in range(3):
-        #         print("real:{:s}  pred:{:s} acc:{:f}".format(ground_truths[i], preds[i],
-        #                                                      compute_accuracy([ground_truths[i]], [preds[i]])))
+            gradients = tape.gradient(batch_loss, model.trainable_variables)
 
-            # checkpoint.save(file_prefix=checkpoint_prefix)
+            gradients, _ = tf.clip_by_global_norm(gradients, 15)
+            optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 
-    # print('Time taken for 1 epoch {} sec\n'.format(time.time() - start))
+
+            # acc = compute_accuracy(targ,y_pred_logits)
+            #
+            tf.summary.scalar('loss', batch_loss, step=step)
+            # tf.summary.scalar('accuracy', acc, step=epoch + batch)
+            tf.summary.scalar('lr', learning_rate.numpy(), step=step)
+            writer.flush()
+
+
+            if batch % 10 == 0:
+                decoded=decoder.decode(y_pred_logits, method='beam_search')
+                print('decoded',decoded)#len is batch_size
+                print('Epoch {} Batch {} Loss {:.4f}  '.format(epoch,batch,batch_loss.numpy()))
+            # if batch % 9 == 0:
+            #     for i in range(3):
+            #         print("real:{:s}  pred:{:s} acc:{:f}".format(ground_truths[i], preds[i],
+            #                                                      compute_accuracy([ground_truths[i]], [preds[i]])))
+
+                # checkpoint.save(file_prefix=checkpoint_prefix)
+
+        # print('Time taken for 1 epoch {} sec\n'.format(time.time() - start))
 
 
 '''
