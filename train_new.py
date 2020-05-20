@@ -155,7 +155,7 @@ with writer.as_default():
         learning_rate.assign(lr)
         # print('start')
 
-        for (batch, (inp, targ)) in enumerate(dataset):
+        for (batch, (inp, targ,ground_truth)) in enumerate(dataset):
             step = epoch * N_BATCH + batch
             # print('batch',batch)
             # print('inp shape',inp.shape)#inp shape (64, 32, 100, 1, 1)
@@ -186,7 +186,9 @@ with writer.as_default():
             writer.flush()
 
 
-            if batch % 10 == 0:
+            if batch % 1 == 0:
+                # print('y true',targ)#dense_shape=tf.Tensor([30 10],
+                print('ground_truth={}',ground_truth)
                 decoded=decoder.decode(y_pred_logits, method='beam_search')
                 print('decoded',decoded)#len is batch_size
                 print('Epoch {} Batch {} Loss {:.4f}  '.format(epoch,batch,batch_loss.numpy()))

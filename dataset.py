@@ -10,6 +10,7 @@ class OCRDataLoader:
     
     def __init__(self, annotation_paths, parse_funcs, image_width, table_path,
                  batch_size=64, shuffle=False, repeat=1):
+        #最原始获取的path,和labels
         img_paths, labels = read_img_paths_and_labels(
             annotation_paths, 
             parse_funcs)
@@ -64,7 +65,7 @@ class OCRDataLoader:
 
 
 
-        return image, sparse_label
+        return image, sparse_label,label
 
 
         # return image, mapped_label
@@ -124,6 +125,7 @@ def read_img_paths_and_labels(annotation_paths, funcs):
         part_img_paths, part_labels = parse_func_map[func](annotation_path)
         img_paths.extend(part_img_paths)
         labels.extend(part_labels)
+    print('read parse:img_paths={},\n,read parse labels={}'.format(img_paths,labels))
     return img_paths, labels
 
 
