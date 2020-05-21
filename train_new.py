@@ -162,9 +162,8 @@ with writer.as_default():
         start = time.time()
 
         total_loss = 0
-        if optimizer.iterations.numpy()%10 ==0:
-            lr = max(0.00001, args.learning_rate * math.pow(0.99, optimizer.iterations.numpy()))
-            learning_rate.assign(lr)
+
+
         # print('start')
 
         for (batch, (inp, targ,ground_truth)) in enumerate(dataset):
@@ -201,7 +200,10 @@ with writer.as_default():
             writer.flush()
 
 
-            if optimizer.iterations % 10 == 0:
+            if optimizer.iterations.numpy() % 30 == 0:
+                lr = max(0.00001, args.learning_rate * math.pow(0.99, step.numpy()))
+                learning_rate.assign(lr)
+
                 # print('y true',targ)#dense_shape=tf.Tensor([30 10],
                 print('ground_truth={}',ground_truth)
                 decoded=decoder.decode(y_pred_logits, method='beam_search')
