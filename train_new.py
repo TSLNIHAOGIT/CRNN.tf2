@@ -153,6 +153,8 @@ manager = tf.train.CheckpointManager(checkpoint, directory=checkpoint_dir , chec
 status=checkpoint.restore(manager.latest_checkpoint)
 print('status',status)
 
+lr = max(0.00001, args.learning_rate * math.pow(0.99, optimizer.iterations))
+learning_rate.assign(lr)
 
 # if True:
 with writer.as_default():
@@ -160,8 +162,9 @@ with writer.as_default():
         start = time.time()
 
         total_loss = 0
-        lr = max(0.00001, args.learning_rate * math.pow(0.99, epoch))
-        learning_rate.assign(lr)
+        if optimizer.iterations%10 ==0:
+            lr = max(0.00001, args.learning_rate * math.pow(0.99, optimizer.iterations))
+            learning_rate.assign(lr)
         # print('start')
 
         for (batch, (inp, targ,ground_truth)) in enumerate(dataset):
@@ -198,7 +201,7 @@ with writer.as_default():
             writer.flush()
 
 
-            if batch % 10 == 0:
+            if optimizer.iterations % 10 == 0:
                 # print('y true',targ)#dense_shape=tf.Tensor([30 10],
                 print('ground_truth={}',ground_truth)
                 decoded=decoder.decode(y_pred_logits, method='beam_search')
