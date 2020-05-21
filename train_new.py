@@ -31,7 +31,7 @@ parser.add_argument("-b", "--batch_size", type=int, default=30,
                     help="Batch size.")
 parser.add_argument("-lr", "--learning_rate", type=float, default=0.0001,
                     help="Learning rate.")
-parser.add_argument("-e", "--epochs", type=int, default=50,
+parser.add_argument("-e", "--epochs", type=int, default=100,
                     help="Num of epochs to train.")
 
 args = parser.parse_args()
@@ -145,6 +145,14 @@ logdir = "./logs/"
 writer = tf.summary.create_file_writer(logdir)
 
 
+checkpoint_dir = './checkpoints'
+# checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt")
+checkpoint = tf.train.Checkpoint(optimizer=optimizer, model=model)
+manager = tf.train.CheckpointManager(checkpoint, directory=checkpoint_dir , checkpoint_name='ckpt', max_to_keep=5)
+
+checkpoint.restore(tf.train.latest_checkpoint(checkpoint_dir))
+
+
 # if True:
 with writer.as_default():
     for epoch in range(args.epochs):
@@ -192,6 +200,9 @@ with writer.as_default():
                 decoded=decoder.decode(y_pred_logits, method='beam_search')
                 print('decoded',decoded)#len is batch_size
                 print('Epoch {} Batch {} Loss {:.4f}  '.format(epoch,batch,batch_loss.numpy()))
+                # checkpoint.save(file_prefix=checkpoint_prefix)
+                path = manager.save(checkpoint_number=batch)
+                print("model saved to %s" % path)
             # if batch % 9 == 0:
             #     for i in range(3):
             #         print("real:{:s}  pred:{:s} acc:{:f}".format(ground_truths[i], preds[i],
