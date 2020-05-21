@@ -153,7 +153,7 @@ manager = tf.train.CheckpointManager(checkpoint, directory=checkpoint_dir , chec
 status=checkpoint.restore(manager.latest_checkpoint)
 print('status',status)
 print('optimizer.iterations.numpy()',optimizer.iterations.numpy())#optimizer.iterations.numpy() 1062
-lr = max(0.00001, args.learning_rate * math.pow(0.99, optimizer.iterations.numpy()))
+lr = max(0.00001, args.learning_rate * math.pow(0.99, optimizer.iterations.numpy()//30))
 learning_rate.assign(lr)
 
 # if True:
@@ -201,7 +201,7 @@ with writer.as_default():
 
 
             if optimizer.iterations.numpy() % 30 == 0:
-                lr = max(0.00001, args.learning_rate * math.pow(0.99, step.numpy()))
+                lr = max(0.00001, args.learning_rate * math.pow(0.99, step.numpy()//30))
                 learning_rate.assign(lr)
 
                 # print('y true',targ)#dense_shape=tf.Tensor([30 10],
