@@ -150,7 +150,8 @@ checkpoint_dir = './checkpoints'
 checkpoint = tf.train.Checkpoint(optimizer=optimizer, model=model)
 manager = tf.train.CheckpointManager(checkpoint, directory=checkpoint_dir , checkpoint_name='ckpt', max_to_keep=5)
 
-checkpoint.restore(tf.train.latest_checkpoint(checkpoint_dir))
+status=checkpoint.restore(manager.latest_checkpoint)
+print('status',status)
 
 
 # if True:
