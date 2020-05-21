@@ -152,8 +152,8 @@ manager = tf.train.CheckpointManager(checkpoint, directory=checkpoint_dir , chec
 
 status=checkpoint.restore(manager.latest_checkpoint)
 print('status',status)
-
-lr = max(0.00001, args.learning_rate * math.pow(0.99, optimizer.iterations))
+print('optimizer.iterations.numpy()',optimizer.iterations.numpy())#optimizer.iterations.numpy() 1062
+lr = max(0.00001, args.learning_rate * math.pow(0.99, optimizer.iterations.numpy()))
 learning_rate.assign(lr)
 
 # if True:
@@ -162,8 +162,8 @@ with writer.as_default():
         start = time.time()
 
         total_loss = 0
-        if optimizer.iterations%10 ==0:
-            lr = max(0.00001, args.learning_rate * math.pow(0.99, optimizer.iterations))
+        if optimizer.iterations.numpy()%10 ==0:
+            lr = max(0.00001, args.learning_rate * math.pow(0.99, optimizer.iterations.numpy()))
             learning_rate.assign(lr)
         # print('start')
 
