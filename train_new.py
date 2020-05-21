@@ -165,7 +165,8 @@ with writer.as_default():
         # print('start')
 
         for (batch, (inp, targ,ground_truth)) in enumerate(dataset):
-            step = epoch * N_BATCH + batch
+            # step = epoch * N_BATCH + batch
+
             # print('batch',batch)
             # print('inp shape',inp.shape)#inp shape (64, 32, 100, 1, 1)
             # loss = 0
@@ -186,6 +187,8 @@ with writer.as_default():
             gradients, _ = tf.clip_by_global_norm(gradients, 15)
             optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 
+            step = optimizer.iterations
+            print('step={}'.format(step))
 
             # acc = compute_accuracy(targ,y_pred_logits)
             #
@@ -195,7 +198,7 @@ with writer.as_default():
             writer.flush()
 
 
-            if batch % 1 == 0:
+            if batch % 10 == 0:
                 # print('y true',targ)#dense_shape=tf.Tensor([30 10],
                 print('ground_truth={}',ground_truth)
                 decoded=decoder.decode(y_pred_logits, method='beam_search')
