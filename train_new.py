@@ -202,7 +202,7 @@ with writer.as_default():
                 print('decoded',decoded)#len is batch_size
                 print('Epoch {} Batch {} Loss {:.4f}  '.format(epoch,batch,batch_loss.numpy()))
                 # checkpoint.save(file_prefix=checkpoint_prefix)
-                path = manager.save(checkpoint_number=batch)
+                path = manager.save(checkpoint_number=step)
                 print("model saved to %s" % path)
             # if batch % 9 == 0:
             #     for i in range(3):
