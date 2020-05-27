@@ -59,8 +59,11 @@ class OCRDataLoader:
         # According to official document, only dense tensor will run on GPU
         # or TPU, but I have tried convert label to dense tensor by `to_tensor`
         # and `row_lengths`, the speed of training step slower than sparse.
+        print('label 0',label)
         chars = tf.strings.unicode_split(label, input_encoding="UTF-8")
+        print('chars ',chars)
         mapped_label = tf.ragged.map_flat_values(self.table.lookup, chars)
+        print('mapped label',mapped_label)
         sparse_label = mapped_label.to_sparse()
 
 
@@ -99,6 +102,12 @@ def parse_example(annotation_path):
         print('content',content)
     img_paths = [os.path.join(dirname, v[0]) for v in content]
     labels = [v[1] for v in content]
+
+    '''
+    img_paths =['E:\\tsl_file\\python_project\\CRNN.tf2\\example\\images/1_Paintbrushes_55044.jpg', 'E:\\tsl_file\\python_project\\CRNN.tf2\\example\\images/2_Reimbursing_64165.jpg', 'E:\\tsl_file\\python_project\\CRNN.tf2\\example\\images/3_Creationisms_17934.jpg', 'E:\\tsl_file\\python_project\\CRNN.tf2\\example\\images/4_A4E_00004.png']
+    labels=['55044', '64165', '17934', '00004']
+
+    '''
     print('img_paths ={}\n labels={}'.format(img_paths,labels))
     return img_paths, labels
 
@@ -125,6 +134,10 @@ def read_img_paths_and_labels(annotation_paths, funcs):
         part_img_paths, part_labels = parse_func_map[func](annotation_path)
         img_paths.extend(part_img_paths)
         labels.extend(part_labels)
+    '''
+    read parse:img_paths=['E:\\tsl_file\\python_project\\CRNN.tf2\\example\\images/1_Paintbrushes_55044.jpg', 'E:\\tsl_file\\python_project\\CRNN.tf2\\example\\images/2_Reimbursing_64165.jpg', 'E:\\tsl_file\\python_project\\CRNN.tf2\\example\\images/3_Creationisms_17934.jpg', 'E:\\tsl_file\\python_project\\CRNN.tf2\\example\\images/4_A4E_00004.png'],
+    read parse labels=['55044', '64165', '17934', '00004']
+    '''
     print('read parse:img_paths={},\n,read parse labels={}'.format(img_paths,labels))
     return img_paths, labels
 

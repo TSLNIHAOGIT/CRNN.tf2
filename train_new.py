@@ -8,7 +8,7 @@ from tensorflow import keras
 from dataset import OCRDataLoader,parse_mjsynth,Decoder
 from model import crnn
 from losses import CTCLoss
-from metrics import WordAccuracy
+from metrics import compute_accuracy #WordAccuracy
 
 
 
@@ -178,6 +178,16 @@ with writer.as_default():
 
             with tf.GradientTape() as tape:
                 y_pred_logits = model(inp)
+                '''
+                targ=SparseTensor(indices=tf.Tensor(
+[[ 0  0][[ 0  0]
+ [ 0  1][0 1],shape=(172, 2),values=tf.Tensor(
+[44 36  2 40 41),shape=(172,),dense_shape=tf.Tensor([30 10], shape=(2,)
+ [ 0  1]y_pred_logits shape=(30, 24, 63)
+                
+                '''
+
+                print('targ={},\n,y_pred_logits={}'.format(targ,y_pred_logits))
                 batch_loss=custom_loss(targ,y_pred_logits)
 
 
@@ -192,32 +202,42 @@ with writer.as_default():
             step = optimizer.iterations
             print('step={}'.format(step))
 
-            # acc = compute_accuracy(targ,y_pred_logits)
-            #
-            tf.summary.scalar('loss', batch_loss, step=step)
-            # tf.summary.scalar('accuracy', acc, step=epoch + batch)
-            tf.summary.scalar('lr', learning_rate.numpy(), step=step)
-            writer.flush()
+
+
 
 
             if optimizer.iterations.numpy() % 30 == 0:
                 lr = max(0.00001, args.learning_rate * math.pow(0.99, step.numpy()//30))
                 learning_rate.assign(lr)
 
+                ground_truth=[each.decode('utf8') for each in ground_truth.numpy()]
                 # print('y true',targ)#dense_shape=tf.Tensor([30 10],
-                print('ground_truth={}',ground_truth)
+                print('ground_truth=',ground_truth)
                 decoded=decoder.decode(y_pred_logits, method='beam_search')
                 print('decoded',decoded)#len is batch_size
+
+                acc = compute_accuracy(ground_truth, decoded)
+                print('acc',acc)
+
+
+                #
+                tf.summary.scalar('loss', batch_loss, step=step)
+                tf.summary.scalar('accuracy', acc, step=step)
+                tf.summary.scalar('lr', learning_rate.numpy(), step=step)
+                writer.flush()
+
+
                 print('Epoch {} Batch {} Loss {:.4f}  '.format(epoch,batch,batch_loss.numpy()))
+
+            # if optimizer.iterations.numpy() % 10 == 0:
+                for i in range(3):
+                    print("real:{:s}  pred:{:s} acc:{:f}".format(ground_truth[i], decoded[i],
+                                                                 compute_accuracy([ground_truth[i]], [decoded[i]])))
+
+                # checkpoint.save(file_prefix=checkpoint_prefix)
                 # checkpoint.save(file_prefix=checkpoint_prefix)
                 path = manager.save(checkpoint_number=step)
                 print("model saved to %s" % path)
-            # if batch % 9 == 0:
-            #     for i in range(3):
-            #         print("real:{:s}  pred:{:s} acc:{:f}".format(ground_truths[i], preds[i],
-            #                                                      compute_accuracy([ground_truths[i]], [preds[i]])))
-
-                # checkpoint.save(file_prefix=checkpoint_prefix)
 
         # print('Time taken for 1 epoch {} sec\n'.format(time.time() - start))
 
