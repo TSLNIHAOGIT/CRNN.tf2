@@ -152,9 +152,19 @@ manager = tf.train.CheckpointManager(checkpoint, directory=checkpoint_dir , chec
 
 status=checkpoint.restore(manager.latest_checkpoint)
 print('status',status)
-print('optimizer.iterations.numpy()',optimizer.iterations.numpy())#optimizer.iterations.numpy() 1062
-lr = max(0.00001, args.learning_rate * math.pow(0.99, optimizer.iterations.numpy()//30))
-learning_rate.assign(lr)
+
+start_step=optimizer.iterations.numpy()
+print('start_step',start_step,N_BATCH)#start_step 495 4
+if start_step==0:
+    learning_rate.assign(start_learning_rate)
+else:
+    lr = max(0.00001, start_learning_rate * math.pow(0.99, (start_step+1)/N_BATCH+1))#epoch
+    learning_rate.assign(lr)
+
+
+# print('optimizer.iterations.numpy()',optimizer.iterations.numpy())#optimizer.iterations.numpy() 1062
+# lr = max(0.00001, args.learning_rate * math.pow(0.99, optimizer.iterations.numpy()//30))
+# learning_rate.assign(lr)
 
 # if True:
 with writer.as_default():
@@ -187,7 +197,7 @@ with writer.as_default():
                 
                 '''
 
-                print('targ={},\n,y_pred_logits={}'.format(targ,y_pred_logits))
+                # print('targ={},\n,y_pred_logits={}'.format(targ,y_pred_logits))
                 batch_loss=custom_loss(targ,y_pred_logits)
 
 
@@ -202,12 +212,9 @@ with writer.as_default():
             step = optimizer.iterations
             print('step={}'.format(step))
 
-
-
-
-
-            if optimizer.iterations.numpy() % 30 == 0:
-                lr = max(0.00001, args.learning_rate * math.pow(0.99, step.numpy()//30))
+            if (step + 1) % N_BATCH == 0:
+                # 这里应该模拟的是一个batch学习率才会进行一次变动
+                lr = max(0.00001, start_learning_rate * math.pow(0.99, (step + 1) / N_BATCH))  # epoch
                 learning_rate.assign(lr)
 
                 ground_truth=[each.decode('utf8') for each in ground_truth.numpy()]
