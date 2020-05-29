@@ -143,22 +143,47 @@ dataset=train_dl()
 
 nums=train_dl.size
 print('nums',nums)
-val_size=int(0.2*nums)
-train_size=nums-val_size
-
-
-
-dataset_val=dataset.take(val_size)
-
-
-dataset=dataset.skip(train_size)
-
-
 
 
 BATCH_SIZE=args.batch_size
-N_BATCH=math.ceil(train_size/BATCH_SIZE)#总数据条数/batch_size
+##所有的数据：未划分训练和测试一共可以分为几个batch
+N_BATCH=math.ceil(nums/BATCH_SIZE)#总数据条数/batch_size
 print('N_BATCH',N_BATCH)
+
+
+
+val_size=int(0.2*N_BATCH)
+print('val_size',val_size)
+# train_size=nums-val_size
+
+
+
+
+
+# print('dataset test',dataset)
+# for (batch, (inp, targ, ground_truth)) in enumerate(dataset):
+#     print('dataset==',inp,targ,ground_truth)
+
+##因为dataset是已经经过batch处理了，返回的都是一个个的batch
+dataset_val=dataset.take(val_size)
+
+# # print('dataset test',dataset)
+# for (batch, (inp, targ, ground_truth)) in enumerate(dataset_val):
+#     print('dataset==',batch,targ,ground_truth)
+
+
+
+dataset=dataset.skip(val_size)
+# print('dataset test',dataset)
+# for (batch, (inp, targ, ground_truth)) in enumerate(dataset):
+#     print('batch==',batch)
+#     print('dataset==',inp,targ,ground_truth
+#           )
+
+
+
+
+
 
 
 logdir = "./logs/"
@@ -193,10 +218,11 @@ with writer.as_default():
 
         total_loss = 0
 
-
+        print('start_train')
         # print('start')
 
         for (batch, (inp, targ,ground_truth)) in enumerate(dataset):
+            print('epoch={},batch={}'.format(epoch,batch))
             # step = epoch * N_BATCH + batch
 
             # print('batch',batch)
@@ -210,10 +236,10 @@ with writer.as_default():
                 y_pred_logits = model(inp)
                 '''
                 targ=SparseTensor(indices=tf.Tensor(
-[[ 0  0][[ 0  0]
- [ 0  1][0 1],shape=(172, 2),values=tf.Tensor(
-[44 36  2 40 41),shape=(172,),dense_shape=tf.Tensor([30 10], shape=(2,)
- [ 0  1]y_pred_logits shape=(30, 24, 63)
+                [[ 0  0][[ 0  0]
+                 [ 0  1][0 1],shape=(172, 2),values=tf.Tensor(
+                [44 36  2 40 41),shape=(172,),dense_shape=tf.Tensor([30 10], shape=(2,)
+                 [ 0  1]y_pred_logits shape=(30, 24, 63)
                 
                 '''
 
