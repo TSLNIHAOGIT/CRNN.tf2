@@ -136,16 +136,36 @@ optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 import math
 import numpy as np
 
-
+print('train_dl',type(train_dl),train_dl,len(train_dl))
 dataset=train_dl()
+
+# nums=tf.data.experimental.cardinality(dataset)
+
+nums=train_dl.size
+print('nums',nums)
+val_size=int(0.2*nums)
+train_size=nums-val_size
+
+
+
+dataset_val=dataset.take(val_size)
+
+
+dataset=dataset.skip(train_size)
+
+
+
+
 BATCH_SIZE=args.batch_size
-N_BATCH=10#总数据条数/batch_size
+N_BATCH=math.ceil(train_size/BATCH_SIZE)#总数据条数/batch_size
+print('N_BATCH',N_BATCH)
+
 
 logdir = "./logs/"
 writer = tf.summary.create_file_writer(logdir)
 
 
-checkpoint_dir = './checkpoints'
+checkpoint_dir = r'E:\tsl_file\python_project\all_models\crnn_checkpoints'
 # checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt")
 checkpoint = tf.train.Checkpoint(optimizer=optimizer, model=model)
 manager = tf.train.CheckpointManager(checkpoint, directory=checkpoint_dir , checkpoint_name='ckpt', max_to_keep=5)
@@ -213,10 +233,14 @@ with writer.as_default():
             print('step={}'.format(step))
 
             if (step + 1) % N_BATCH == 0:
-                # 这里应该模拟的是一个batch学习率才会进行一次变动
+                # 这里应该模拟的是一个epoch学习率才会进行一次变动
                 lr = max(0.00001, start_learning_rate * math.pow(0.99, (step + 1) / N_BATCH))  # epoch
                 learning_rate.assign(lr)
 
+            if (step + 1)%min(30,N_BATCH)==0:
+                '''
+                每30次迭代之后，添加损失函数到tensorboard,并保存一次模型
+                '''
                 ground_truth=[each.decode('utf8') for each in ground_truth.numpy()]
                 # print('y true',targ)#dense_shape=tf.Tensor([30 10],
                 print('ground_truth=',ground_truth)
@@ -225,6 +249,24 @@ with writer.as_default():
 
                 acc = compute_accuracy(ground_truth, decoded)
                 print('acc',acc)
+
+
+                ##在验证集上测试准确率
+                acc_val=[]
+                for (batch, (inp_val, targ_val, ground_truth_val)) in enumerate(dataset_val):
+                    y_pred_logits_val = model(inp_val)
+                    ground_truth_val = [each.decode('utf8') for each in ground_truth_val.numpy()]
+                    decoded_val = decoder.decode(y_pred_logits_val, method='beam_search')
+                    acc_val.append( compute_accuracy(ground_truth_val, decoded_val))
+                print('acc_val',np.mean(acc_val),acc_val)
+                for i in range(3):
+                    print("real_val:{:s}  pred_val:{:s} acc_val:{:f}".format(ground_truth_val[i], decoded_val[i],
+                                                                 compute_accuracy([ground_truth_val[i]], [decoded_val[i]])))
+
+
+
+
+
 
 
                 #

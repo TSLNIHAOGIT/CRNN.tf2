@@ -71,6 +71,7 @@ print('status',status)
 # y_pred = model.predict(imgs)
 y_pred = model(imgs)
 print('y_pred shape',y_pred.shape)
+#y_pred shape (9, 24, 63)
 
 
 
