@@ -14,18 +14,18 @@ from metrics import compute_accuracy #WordAccuracy
 
 
 parser = argparse.ArgumentParser()
-# parser.add_argument("-ta", "--train_annotation_paths", type=str,default='../example/images',
-#                     required=True, nargs="+",
-#                     help="The path of training data annnotation file.")
-parser.add_argument("-va", "--val_annotation_paths", type=str, nargs="+", 
+parser.add_argument("-ta", "--train_annotation_paths", type=str,default=[r'E:\tsl_file\python_project\all_datas\annotation_crnn.txt'],
+                    required=False, nargs="+",
+                    help="The path of training data annnotation file.")
+parser.add_argument("-va", "--val_annotation_paths", type=str, nargs="+",
                     help="The path of val data annotation file.")
-# parser.add_argument("-tf", "--train_parse_funcs", type=str,default='mjsynth', required=True,
-#                     nargs="+", help="The parse functions of annotaion files.")
-parser.add_argument("-vf", "--val_parse_funcs", type=str, nargs="+", 
+parser.add_argument("-tf", "--train_parse_funcs", type=str,default=['example'], required=False,
+                    nargs="+", help="The parse functions of annotaion files.")
+parser.add_argument("-vf", "--val_parse_funcs", type=str, nargs="+",
                     help="The parse functions of annotaion files.")
-# parser.add_argument("-t", "--table_path", type=str, required=True,default='example/tables' ,
-#                     help="The path of table file.")
-parser.add_argument("-w", "--image_width", type=int, default=100, 
+parser.add_argument("-t", "--table_path", type=str, required=False,default=r'E:\tsl_file\python_project\CRNN.tf2\example\table.txt',
+                    help="The path of table file.")
+parser.add_argument("-w", "--image_width", type=int, default=100,
                     help="Image width(>=16).")
 parser.add_argument("-b", "--batch_size", type=int, default=30,
                     help="Batch size.")
@@ -38,21 +38,21 @@ args = parser.parse_args()
 print('args',args)
 
 train_dl = OCRDataLoader(
-    # args.train_annotation_paths,
-    # args.train_parse_funcs,
+    args.train_annotation_paths,
+    args.train_parse_funcs,
 
-[
-    r'E:\tsl_file\python_project\all_datas\annotation_crnn.txt'
-    # r'E:\tsl_file\python_project\CRNN.tf2\example\annotation.txt',
- ],
-[
-    'example'
-],
+# [
+#     r'E:\tsl_file\python_project\all_datas\annotation_crnn.txt'
+#     # r'E:\tsl_file\python_project\CRNN.tf2\example\annotation.txt',
+#  ],
+# [
+#     'example'
+# ],
 
 
     args.image_width,
-    # args.table_path,
-r'E:\tsl_file\python_project\CRNN.tf2\example\table.txt',
+    args.table_path,
+# r'E:\tsl_file\python_project\CRNN.tf2\example\table.txt',
 
     args.batch_size,
     True)
@@ -155,46 +155,18 @@ print('N_BATCH',N_BATCH)
 val_size=int(0.2*N_BATCH)
 print('val_size',val_size)
 # train_size=nums-val_size
-
-
-
-
-
-# print('dataset test',dataset)
-# for (batch, (inp, targ, ground_truth)) in enumerate(dataset):
-#     print('dataset==',inp,targ,ground_truth)
-
-
-
 ##（似乎没有问题，下次再看）这里有问题，遇到新的batch进行shuffle时，会将上次的验证集数据，变为训练解数据，因此有问题。要保证所有的batch中，
 
 ##因为dataset是已经经过batch处理了，返回的都是一个个的batch
 dataset_val=dataset.take(val_size)
 
-# # print('dataset test',dataset)
-# for (batch, (inp, targ, ground_truth)) in enumerate(dataset_val):
-#     print('dataset==',batch,targ,ground_truth)
-
-
-
 dataset=dataset.skip(val_size)
-# print('dataset test',dataset)
-# for (batch, (inp, targ, ground_truth)) in enumerate(dataset):
-#     print('batch==',batch)
-#     print('dataset==',inp,targ,ground_truth
-#           )
 
 
 
 import datetime
-
-
 #
 current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
-# train_log_dir = 'logs/gradient_tape/' + current_time + '/train'
-# test_log_dir = 'logs/gradient_tape/' + current_time + '/test'
-# train_summary_writer = tf.summary.create_file_writer(train_log_dir)
-# test_summary_writer = tf.summary.create_file_writer(test_log_dir)
 
 
 #动态生成的日志模型等一般不要放到pycharm项目里，会不断更新这些文件的索引影响使用
@@ -221,10 +193,6 @@ else:
     learning_rate.assign(lr)
 
 
-# print('optimizer.iterations.numpy()',optimizer.iterations.numpy())#optimizer.iterations.numpy() 1062
-# lr = max(0.00001, args.learning_rate * math.pow(0.99, optimizer.iterations.numpy()//30))
-# learning_rate.assign(lr)
-
 # if True:
 
 for epoch in range(args.epochs):
@@ -238,14 +206,7 @@ for epoch in range(args.epochs):
         dataset=dataset.shuffle(10000)
         for (batch, (inp, targ,ground_truth)) in enumerate(dataset):
             print('epoch={},batch={}'.format(epoch,batch))
-            # step = epoch * N_BATCH + batch
 
-            # print('batch',batch)
-            # print('inp shape',inp.shape)#inp shape (64, 32, 100, 1, 1)
-            # loss = 0
-            # global_step.assign_add(1)
-
-            # results = np.zeros((BATCH_SIZE, targ.shape[1] - 1), np.int32)
 
             with tf.GradientTape() as tape:
                 y_pred_logits = model(inp)
