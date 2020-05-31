@@ -31,7 +31,7 @@ parser.add_argument("-b", "--batch_size", type=int, default=30,
                     help="Batch size.")
 parser.add_argument("-lr", "--learning_rate", type=float, default=0.0001,
                     help="Learning rate.")
-parser.add_argument("-e", "--epochs", type=int, default=100,
+parser.add_argument("-e", "--epochs", type=int, default=500,
                     help="Num of epochs to train.")
 
 args = parser.parse_args()
@@ -164,6 +164,10 @@ print('val_size',val_size)
 # for (batch, (inp, targ, ground_truth)) in enumerate(dataset):
 #     print('dataset==',inp,targ,ground_truth)
 
+
+
+##（似乎没有问题，下次再看）这里有问题，遇到新的batch进行shuffle时，会将上次的验证集数据，变为训练解数据，因此有问题。要保证所有的batch中，
+
 ##因为dataset是已经经过batch处理了，返回的都是一个个的batch
 dataset_val=dataset.take(val_size)
 
@@ -182,12 +186,22 @@ dataset=dataset.skip(val_size)
 
 
 
+import datetime
 
 
+#
+current_time = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+# train_log_dir = 'logs/gradient_tape/' + current_time + '/train'
+# test_log_dir = 'logs/gradient_tape/' + current_time + '/test'
+# train_summary_writer = tf.summary.create_file_writer(train_log_dir)
+# test_summary_writer = tf.summary.create_file_writer(test_log_dir)
 
 
-logdir = "./logs/"
+#动态生成的日志模型等一般不要放到pycharm项目里，会不断更新这些文件的索引影响使用
+logdir = r"E:\tsl_file\python_project\all_models\crnn_logs\{}\train".format(current_time)
+logdir_val=r"E:\tsl_file\python_project\all_models\crnn_logs\{}\val".format(current_time)
 writer = tf.summary.create_file_writer(logdir)
+writer_val = tf.summary.create_file_writer(logdir_val)
 
 
 checkpoint_dir = r'E:\tsl_file\python_project\all_models\crnn_checkpoints'
@@ -212,8 +226,8 @@ else:
 # learning_rate.assign(lr)
 
 # if True:
-with writer.as_default():
-    for epoch in range(args.epochs):
+
+for epoch in range(args.epochs):
         start = time.time()
 
         total_loss = 0
@@ -221,6 +235,7 @@ with writer.as_default():
         print('start_train')
         # print('start')
 
+        dataset=dataset.shuffle(10000)
         for (batch, (inp, targ,ground_truth)) in enumerate(dataset):
             print('epoch={},batch={}'.format(epoch,batch))
             # step = epoch * N_BATCH + batch
@@ -263,6 +278,8 @@ with writer.as_default():
                 lr = max(0.00001, start_learning_rate * math.pow(0.99, (step + 1) / N_BATCH))  # epoch
                 learning_rate.assign(lr)
 
+
+            #经过一定迭代步数之后才进行验证
             if (step + 1)%min(30,N_BATCH)==0:
                 '''
                 每30次迭代之后，添加损失函数到tensorboard,并保存一次模型
@@ -272,36 +289,15 @@ with writer.as_default():
                 print('ground_truth=',ground_truth)
                 decoded=decoder.decode(y_pred_logits, method='beam_search')
                 print('decoded',decoded)#len is batch_size
-
                 acc = compute_accuracy(ground_truth, decoded)
-                print('acc',acc)
+                print('acc', acc)
 
-
-                ##在验证集上测试准确率
-                acc_val=[]
-                for (batch, (inp_val, targ_val, ground_truth_val)) in enumerate(dataset_val):
-                    y_pred_logits_val = model(inp_val)
-                    ground_truth_val = [each.decode('utf8') for each in ground_truth_val.numpy()]
-                    decoded_val = decoder.decode(y_pred_logits_val, method='beam_search')
-                    acc_val.append( compute_accuracy(ground_truth_val, decoded_val))
-                print('acc_val',np.mean(acc_val),acc_val)
-                for i in range(3):
-                    print("real_val:{:s}  pred_val:{:s} acc_val:{:f}".format(ground_truth_val[i], decoded_val[i],
-                                                                 compute_accuracy([ground_truth_val[i]], [decoded_val[i]])))
-
-
-
-
-
-
-
-                #
-                tf.summary.scalar('loss', batch_loss, step=step)
-                tf.summary.scalar('accuracy', acc, step=step)
-                tf.summary.scalar('lr', learning_rate.numpy(), step=step)
-                writer.flush()
-
-
+                # 每迭代一次，就将损失记录下来
+                with writer.as_default():
+                    tf.summary.scalar('loss', batch_loss, step=step)
+                    tf.summary.scalar('accuracy', acc, step=step)
+                    tf.summary.scalar('lr', learning_rate.numpy(), step=step)
+                    writer.flush()
                 print('Epoch {} Batch {} Loss {:.4f}  '.format(epoch,batch,batch_loss.numpy()))
 
             # if optimizer.iterations.numpy() % 10 == 0:
@@ -313,6 +309,26 @@ with writer.as_default():
                 # checkpoint.save(file_prefix=checkpoint_prefix)
                 path = manager.save(checkpoint_number=step)
                 print("model saved to %s" % path)
+
+
+                ##在验证集上测试准确率
+                acc_val = []
+                for (batch, (inp_val, targ_val, ground_truth_val)) in enumerate(dataset_val):
+                    y_pred_logits_val = model(inp_val)
+                    ground_truth_val = [each.decode('utf8') for each in ground_truth_val.numpy()]
+                    decoded_val = decoder.decode(y_pred_logits_val, method='beam_search')
+                    acc_val.append(compute_accuracy(ground_truth_val, decoded_val))
+                print('acc_val', np.mean(acc_val), acc_val)
+                for i in range(3):
+                    print("real_val:{:s}  pred_val:{:s} acc_val:{:f}".format(ground_truth_val[i], decoded_val[i],
+                                                                             compute_accuracy([ground_truth_val[i]],
+                                                                                              [decoded_val[i]])))
+                with writer_val.as_default():
+                    '''
+                    训练和测试存储在两个文件夹中，但是要名称相同才会显示在同一福图中，否则会显示在两幅图中的
+                    '''
+                    tf.summary.scalar('accuracy', np.mean(acc_val), step=step)
+                    writer_val.flush()
 
         # print('Time taken for 1 epoch {} sec\n'.format(time.time() - start))
 

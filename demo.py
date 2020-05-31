@@ -16,7 +16,8 @@ def read_image(path):
         global num_invalid
         return tf.zeros((32, args.image_width, 1))
     img = tf.image.convert_image_dtype(img, tf.float32)
-    if args.keep_ratio:
+    # if args.keep_ratio:
+    if False:
         width = round(32 * img.shape[1] / img.shape[0])
     else: 
         width = args.image_width
@@ -59,7 +60,7 @@ model=crnn(63)
 decoder = Decoder(inv_table)
 
 
-checkpoint_dir = './checkpoints'
+checkpoint_dir = r'E:\tsl_file\python_project\all_models\crnn_checkpoints'
 # checkpoint_prefix = os.path.join(checkpoint_dir, "ckpt")
 checkpoint = tf.train.Checkpoint( model=model)
 manager = tf.train.CheckpointManager(checkpoint, directory=checkpoint_dir , checkpoint_name='ckpt', max_to_keep=5)
