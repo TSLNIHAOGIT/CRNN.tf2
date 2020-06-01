@@ -19,7 +19,7 @@ def read_image(path):
     # if args.keep_ratio:
     if False:
         width = round(32 * img.shape[1] / img.shape[0])
-    else: 
+    else:
         width = args.image_width
     img = tf.image.resize(img, (32, width))
     return img
@@ -54,9 +54,9 @@ if args_images is not None:
         imgs = tf.expand_dims(img, 0)
 with open(args_table_path, "r") as f:
     inv_table = [char.strip() for char in f]
-
+print('len inv_table',len(inv_table))
 # model = keras.models.load_model(args.model, compile=False)
-model=crnn(63)
+model=crnn(len(inv_table))
 decoder = Decoder(inv_table)
 
 

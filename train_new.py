@@ -17,11 +17,11 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-ta", "--train_annotation_paths", type=str,default=[r'E:\tsl_file\python_project\all_datas\annotation_crnn.txt'],
                     required=False, nargs="+",
                     help="The path of training data annnotation file.")
-parser.add_argument("-va", "--val_annotation_paths", type=str, nargs="+",
+parser.add_argument("-va", "--val_annotation_paths", type=str, default=[r'E:\tsl_file\python_project\all_datas\annotation_crnn_val.txt'],nargs="+",
                     help="The path of val data annotation file.")
 parser.add_argument("-tf", "--train_parse_funcs", type=str,default=['example'], required=False,
                     nargs="+", help="The parse functions of annotaion files.")
-parser.add_argument("-vf", "--val_parse_funcs", type=str, nargs="+",
+parser.add_argument("-vf", "--val_parse_funcs", type=str, default=['example'],nargs="+",
                     help="The parse functions of annotaion files.")
 parser.add_argument("-t", "--table_path", type=str, required=False,default=r'E:\tsl_file\python_project\CRNN.tf2\example\table.txt',
                     help="The path of table file.")
@@ -31,7 +31,7 @@ parser.add_argument("-b", "--batch_size", type=int, default=30,
                     help="Batch size.")
 parser.add_argument("-lr", "--learning_rate", type=float, default=0.0001,
                     help="Learning rate.")
-parser.add_argument("-e", "--epochs", type=int, default=500,
+parser.add_argument("-e", "--epochs", type=int, default=100,
                     help="Num of epochs to train.")
 
 args = parser.parse_args()
@@ -40,20 +40,8 @@ print('args',args)
 train_dl = OCRDataLoader(
     args.train_annotation_paths,
     args.train_parse_funcs,
-
-# [
-#     r'E:\tsl_file\python_project\all_datas\annotation_crnn.txt'
-#     # r'E:\tsl_file\python_project\CRNN.tf2\example\annotation.txt',
-#  ],
-# [
-#     'example'
-# ],
-
-
     args.image_width,
     args.table_path,
-# r'E:\tsl_file\python_project\CRNN.tf2\example\table.txt',
-
     args.batch_size,
     True)
 
@@ -152,15 +140,16 @@ print('N_BATCH',N_BATCH)
 
 
 
-val_size=int(0.2*N_BATCH)
-print('val_size',val_size)
+# val_size=int(0.2*N_BATCH)
+# print('val_size',val_size)
 # train_size=nums-val_size
 ##（似乎没有问题，下次再看）这里有问题，遇到新的batch进行shuffle时，会将上次的验证集数据，变为训练解数据，因此有问题。要保证所有的batch中，
 
 ##因为dataset是已经经过batch处理了，返回的都是一个个的batch
-dataset_val=dataset.take(val_size)
+# dataset_val=dataset.take(val_size)
+dataset_val=val_dl()
 
-dataset=dataset.skip(val_size)
+# dataset=dataset.skip(val_size)
 
 
 
