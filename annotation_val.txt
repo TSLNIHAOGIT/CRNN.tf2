@@ -1,0 +1,1 @@
+E:\tsl_file\python_project\CRNN.tf2\example\images\0_A4E.png A4E

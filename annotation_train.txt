@@ -1,0 +1,9 @@
+E:\tsl_file\python_project\CRNN.tf2\example\images\2_Reimbursing_64165.jpg Reimbursing
+E:\tsl_file\python_project\CRNN.tf2\example\images\6t_MZWD18.png MZWD18
+E:\tsl_file\python_project\CRNN.tf2\example\images\1_Paintbrushes_55044.jpg Paintbrushes
+E:\tsl_file\python_project\CRNN.tf2\example\images\7t_S.png S
+E:\tsl_file\python_project\CRNN.tf2\example\images\3_W37HUGZ.png W37HUGZ
+E:\tsl_file\python_project\CRNN.tf2\example\images\1_E55A.png E55A
+E:\tsl_file\python_project\CRNN.tf2\example\images\4_ALHOQ.png ALHOQ
+E:\tsl_file\python_project\CRNN.tf2\example\images\5_WN.png WN
+E:\tsl_file\python_project\CRNN.tf2\example\images\2_2LEB.png 2LEB
